@@ -1,14 +1,18 @@
-use serde::Deserialize;
-use std::path::Path;
+use serde::{Deserialize, Serialize};
+use tokio::fs;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Api {
     pub url: String,
     pub college_id: u32,
+    pub college_name: Option<String>,
     pub campus_id: u32,
+    pub campus_name: Option<String>,
     pub group_id: u32,
+    pub group_name: Option<String>,
 }
-#[derive(Debug, Deserialize, Clone)]
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct App {
     pub refresh_interval: u64,
     pub cache_enabled: bool,
@@ -16,7 +20,7 @@ pub struct App {
     pub current_theme: String,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct MainConfig {
     #[serde(rename = "api")]
     pub api: Api,
@@ -26,18 +30,54 @@ pub struct MainConfig {
 
 impl MainConfig {
     pub async fn load() -> anyhow::Result<Self> {
-        let path = dirs::config_dir()
-            .unwrap_or_else(|| ".".into())
-            .join("osatui/config.toml");
+        let path = Self::config_path();
 
-        let s = if path.exists() {
-            tokio::fs::read_to_string(&path).await?
+        if path.exists() {
+            let s = tokio::fs::read_to_string(&path).await?;
+            let mut cfg: Self = toml::from_str(&s)?;
+            cfg.api.url = cfg.api.url.trim_end_matches('/').to_string();
+            Ok(cfg)
         } else {
-            tokio::fs::read_to_string("config.toml").await?
-        };
+            let default_config = Self::default();
+            default_config.save().await?;
+            Ok(default_config)
+        }
+    }
 
-        let mut cfg: Self = toml::from_str(&s)?;
-        cfg.api.url = cfg.api.url.trim_end_matches('/').to_string();
-        Ok(cfg)
+    pub async fn save(&self) -> anyhow::Result<()> {
+        let path = Self::config_path();
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).await?;
+        }
+
+        let toml = toml::to_string_pretty(self)?;
+        fs::write(&path, toml).await?;
+        Ok(())
+    }
+
+    fn config_path() -> std::path::PathBuf {
+        dirs::config_dir()
+            .unwrap_or_else(|| ".".into())
+            .join("osatui/config.toml")
+    }
+
+    fn default() -> Self {
+        Self {
+            api: Api {
+                url: "https://api.example.com".to_string(),
+                college_id: 1,
+                college_name: None,
+                campus_id: 1,
+                campus_name: None,
+                group_id: 1,
+                group_name: None,
+            },
+            app: App {
+                refresh_interval: 300,
+                cache_enabled: true,
+                cache_ttl: 3600,
+                current_theme: "dark".to_string(),
+            },
+        }
     }
 }

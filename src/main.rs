@@ -8,7 +8,7 @@ mod utils;
 use app::App;
 use crossterm::{
     ExecutableCommand,
-    event::{self, Event, KeyCode, KeyEventKind},
+    event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
 use ratatui::{Terminal, backend::CrosstermBackend};
@@ -31,12 +31,52 @@ async fn main() -> anyhow::Result<()> {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
-                    match key.code {
-                        KeyCode::Char('q') => app.quit(),
-                        KeyCode::F(1) => app.prev_day().await?,
-                        KeyCode::F(2) => app.go_today().await?,
-                        KeyCode::F(3) => app.next_day().await?,
-                        _ => {}
+                    match app.mode() {
+                        app::AppMode::Normal => match key.code {
+                            KeyCode::Char('q') => app.quit(),
+                            KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                                app.start_setup();
+                            }
+                            KeyCode::Char('o') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                                if let Err(e) = app.start_selector().await {
+                                    eprintln!("Ошибка запуска селектора: {}", e);
+                                }
+                            }
+                            KeyCode::F(1) => {
+                                if let Err(e) = app.prev_day().await {
+                                    eprintln!("Ошибка перехода к предыдущему дню: {}", e);
+                                }
+                            }
+                            KeyCode::F(2) => {
+                                if let Err(e) = app.go_today().await {
+                                    eprintln!("Ошибка перехода к сегодняшнему дню: {}", e);
+                                }
+                            }
+                            KeyCode::F(3) => {
+                                if let Err(e) = app.next_day().await {
+                                    eprintln!("Ошибка перехода к следующему дню: {}", e);
+                                }
+                            }
+                            _ => {}
+                        },
+                        app::AppMode::Setup(_) => {}
+                        app::AppMode::Selector(_) => match key.code {
+                            KeyCode::Enter => {
+                                if let Err(e) = app.handle_selector_input().await {
+                                    eprintln!("Ошибка обработки выбора: {}", e);
+                                }
+                            }
+                            KeyCode::Down => {
+                                app.handle_selector_navigation(true).await;
+                            }
+                            KeyCode::Up => {
+                                app.handle_selector_navigation(false).await;
+                            }
+                            KeyCode::Esc => {
+                                *app.mode_mut() = app::AppMode::Normal;
+                            }
+                            _ => {}
+                        },
                     }
                 }
             }
