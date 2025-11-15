@@ -1,0 +1,11 @@
+[api]
+url = "https://api.thisishyum.ru/schedule_api/tyumen/"
+college_id = 1
+campus_id = 1
+group_id = 6
+
+[app]
+refresh_interval = 300
+cache_enabled = true
+cache_ttl = 3600
+current_theme = "dark"
