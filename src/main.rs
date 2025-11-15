@@ -66,11 +66,8 @@ async fn main() -> anyhow::Result<()> {
                                     eprintln!("Ошибка обработки выбора: {}", e);
                                 }
                             }
-                            KeyCode::Down => {
-                                app.handle_selector_navigation(true).await;
-                            }
-                            KeyCode::Up => {
-                                app.handle_selector_navigation(false).await;
+                            KeyCode::Down | KeyCode::Up | KeyCode::Right | KeyCode::Left => {
+                                app.handle_selector_navigation(key.code).await;
                             }
                             KeyCode::Esc => {
                                 *app.mode_mut() = app::AppMode::Normal;

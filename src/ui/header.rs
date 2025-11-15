@@ -23,8 +23,20 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
         format!("Группа ID: {}", app.config.group_id())
     };
 
+    let schedule_info = if app.schedules().is_empty() {
+        "Нет занятий".to_string()
+    } else {
+        let lessons_count = app
+            .schedules()
+            .iter()
+            .map(|s| s.lessons.len())
+            .sum::<usize>();
+        format!("{} занятий", lessons_count)
+    };
+
     let header_text = format!(
-        " {date_str} | {college_info} | {campus_info} | {group_info} | F1 ← | F2 Сегодня | F3 → | Ctrl+S Настройки | Ctrl+O Выбор | q Выход "
+        " {} | {} | {} | {} | {} ",
+        date_str, college_info, campus_info, group_info, schedule_info
     );
 
     let header = Paragraph::new(header_text)

@@ -4,8 +4,20 @@ use ratatui::{prelude::*, widgets::*};
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let theme = app.theme();
 
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(1), Constraint::Length(3)])
+        .split(area);
+
+    render_schedule_table(f, app, chunks[0]);
+    render_help(f, app, chunks[1]);
+}
+
+fn render_schedule_table(f: &mut Frame, app: &App, area: Rect) {
+    let theme = app.theme();
+
     if app.schedules().is_empty() {
-        let msg = Paragraph::new("Нет занятий")
+        let msg = Paragraph::new("Нет занятий на выбранную дату")
             .style(Style::default().fg(theme.color("highlight")))
             .alignment(Alignment::Center);
         f.render_widget(msg, area);
@@ -50,4 +62,21 @@ pub fn render(f: &mut Frame, app: &App, area: Rect) {
     );
 
     f.render_widget(table, area);
+}
+
+fn render_help(f: &mut Frame, app: &App, area: Rect) {
+    let theme = app.theme();
+
+    let help_text = "F1: предыдущий день | F2: сегодня | F3: следующий день | Ctrl+O: выбор группы | Ctrl+S: настройки | Q: выход";
+
+    let help = Paragraph::new(help_text)
+        .style(Style::default().fg(theme.color("table_header")))
+        .alignment(Alignment::Center)
+        .block(
+            Block::default()
+                .borders(Borders::TOP)
+                .border_style(Style::default().fg(theme.color("border"))),
+        );
+
+    f.render_widget(help, area);
 }

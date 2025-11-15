@@ -2,6 +2,26 @@
 name = "osatui"
 version = "0.1.0"
 edition = "2024"
+description = "Terminal UI client for educational schedule API with interactive college, campus and group selection"
+authors = ["Vadim <vadim@storozhiloff.ru>"]
+license = "MIT"
+repository = "https://github.com/bircoder432/osatui"
+readme = "README.md"
+keywords = ["tui", "schedule", "education", "terminal", "api-client"]
+categories = ["command-line-utilities", "api-bindings"]
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE-*",
+    "config.toml.example",
+    "theme.toml.example",
+]
+
+
+[features]
+default = []
+logging = ["tracing", "osars/logging"]
 
 [dependencies]
 anyhow = "1.0.100"

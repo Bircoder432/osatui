@@ -3,6 +3,8 @@ use osars::{
     Client,
     models::{Campus, College, Group, Schedule},
 };
+use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct ApiClient {
     config: Config,
@@ -11,6 +13,7 @@ pub struct ApiClient {
     campus_id: Option<u32>,
     group_id: Option<u32>,
     cache: Option<CacheManager>,
+    lists_cache: HashMap<String, (Vec<u8>, u64)>,
 }
 
 impl ApiClient {
@@ -31,6 +34,7 @@ impl ApiClient {
             campus_id: Some(campus_id),
             group_id: Some(group_id),
             cache,
+            lists_cache: HashMap::new(),
         })
     }
 
@@ -48,6 +52,7 @@ impl ApiClient {
             campus_id: None,
             group_id: None,
             cache,
+            lists_cache: HashMap::new(),
         })
     }
 
@@ -118,30 +123,64 @@ impl ApiClient {
             .ok_or_else(|| anyhow::anyhow!("Группа с именем '{}' не найдена", group_name))
     }
 
-    pub async fn get_colleges(&self) -> anyhow::Result<Vec<College>> {
-        Client::new(self.config.api_url())
-            .colleges()
-            .send()
-            .await
-            .map_err(Into::into)
+    pub async fn get_colleges(&mut self) -> anyhow::Result<Vec<College>> {
+        let cache_key = "colleges_list".to_string();
+        if let Some((cached_data, timestamp)) = self.lists_cache.get(&cache_key) {
+            let current_time = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+            if current_time - timestamp < 300 {
+                return Ok(serde_json::from_slice(cached_data)?);
+            }
+        }
+
+        let colleges = Client::new(self.config.api_url()).colleges().send().await?;
+        let serialized = serde_json::to_vec(&colleges)?;
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+        self.lists_cache.insert(cache_key, (serialized, timestamp));
+
+        Ok(colleges)
     }
 
-    pub async fn get_campuses(&self, college_id: u32) -> anyhow::Result<Vec<Campus>> {
+    pub async fn get_campuses(&mut self, college_id: u32) -> anyhow::Result<Vec<Campus>> {
+        let cache_key = format!("campuses_list_{}", college_id);
+        if let Some((cached_data, timestamp)) = self.lists_cache.get(&cache_key) {
+            let current_time = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+            if current_time - timestamp < 300 {
+                return Ok(serde_json::from_slice(cached_data)?);
+            }
+        }
+
         let client = Client::new(self.config.api_url()).with_college(college_id);
-        client
+        let campuses = client
             .campuses()
             .map_err(|e| anyhow::anyhow!("Не удалось создать запрос кампусов: {}", e))?
             .send()
-            .await
-            .map_err(Into::into)
+            .await?;
+
+        let serialized = serde_json::to_vec(&campuses)?;
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+        self.lists_cache.insert(cache_key, (serialized, timestamp));
+
+        Ok(campuses)
     }
 
-    pub async fn get_groups(&self, campus_id: u32) -> anyhow::Result<Vec<Group>> {
-        Client::new(self.config.api_url())
+    pub async fn get_groups(&mut self, campus_id: u32) -> anyhow::Result<Vec<Group>> {
+        let cache_key = format!("groups_list_{}", campus_id);
+        if let Some((cached_data, timestamp)) = self.lists_cache.get(&cache_key) {
+            let current_time = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+            if current_time - timestamp < 300 {
+                return Ok(serde_json::from_slice(cached_data)?);
+            }
+        }
+
+        let groups = Client::new(self.config.api_url())
             .groups(campus_id)
             .send()
-            .await
-            .map_err(Into::into)
+            .await?;
+        let serialized = serde_json::to_vec(&groups)?;
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+        self.lists_cache.insert(cache_key, (serialized, timestamp));
+
+        Ok(groups)
     }
 
     pub async fn fetch(&self, date: &AppDate) -> anyhow::Result<Vec<Schedule>> {
@@ -178,5 +217,9 @@ impl ApiClient {
 
     pub fn group_id(&self) -> Option<u32> {
         self.group_id
+    }
+
+    pub fn clear_cache(&mut self) {
+        self.lists_cache.clear();
     }
 }

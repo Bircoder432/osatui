@@ -7,6 +7,7 @@ use crate::{
     },
     utils::AppDate,
 };
+use crossterm::event::KeyCode;
 use osars::models::Schedule;
 
 pub enum AppMode {
@@ -57,7 +58,7 @@ impl App {
     }
 
     async fn load_colleges(&mut self) -> anyhow::Result<()> {
-        if let (AppMode::Selector(selector), Some(api)) = (&mut self.mode, &self.api) {
+        if let (AppMode::Selector(selector), Some(api)) = (&mut self.mode, &mut self.api) {
             match api.get_colleges().await {
                 Ok(colleges) => {
                     selector.colleges = colleges;
@@ -75,7 +76,7 @@ impl App {
     }
 
     async fn load_campuses(&mut self, college_id: u32) -> anyhow::Result<()> {
-        if let (AppMode::Selector(selector), Some(api)) = (&mut self.mode, &self.api) {
+        if let (AppMode::Selector(selector), Some(api)) = (&mut self.mode, &mut self.api) {
             match api.get_campuses(college_id).await {
                 Ok(campuses) => {
                     selector.campuses = campuses;
@@ -92,7 +93,7 @@ impl App {
     }
 
     async fn load_groups(&mut self, campus_id: u32) -> anyhow::Result<()> {
-        if let (AppMode::Selector(selector), Some(api)) = (&mut self.mode, &self.api) {
+        if let (AppMode::Selector(selector), Some(api)) = (&mut self.mode, &mut self.api) {
             match api.get_groups(campus_id).await {
                 Ok(groups) => {
                     selector.groups = groups;
@@ -133,7 +134,7 @@ impl App {
                         let college_id = college.college_id;
                         selector.selected_college = Some(college);
                         selector.stage = SelectionStage::Campus;
-                        selector.selected_index = 0;
+                        selector.reset_pagination();
                         selector.error_message = None;
                         self.load_campuses(college_id).await?;
                     }
@@ -143,7 +144,7 @@ impl App {
                         let campus_id = campus.id;
                         selector.selected_campus = Some(campus);
                         selector.stage = SelectionStage::Group;
-                        selector.selected_index = 0;
+                        selector.reset_pagination();
                         selector.error_message = None;
                         self.load_groups(campus_id).await?;
                     }
@@ -169,12 +170,14 @@ impl App {
         Ok(())
     }
 
-    pub async fn handle_selector_navigation(&mut self, is_next: bool) {
+    pub async fn handle_selector_navigation(&mut self, key: KeyCode) {
         if let AppMode::Selector(selector) = &mut self.mode {
-            if is_next {
-                selector.next_item();
-            } else {
-                selector.prev_item();
+            match key {
+                KeyCode::Down => selector.next_item(),
+                KeyCode::Up => selector.prev_item(),
+                KeyCode::Right => selector.next_page(),
+                KeyCode::Left => selector.prev_page(),
+                _ => {}
             }
         }
     }
