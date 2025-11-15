@@ -19,9 +19,7 @@ include = [
 ]
 
 
-[features]
-default = []
-logging = ["tracing", "osars/logging"]
+
 
 [dependencies]
 anyhow = "1.0.100"
