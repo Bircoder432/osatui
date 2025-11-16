@@ -1,5 +1,5 @@
 # osatui
-
+![screenshot](https://github.com/bircoder432/osatui/raw/master/.assets/screenshot.png)
 Terminal UI client for educational schedule API with interactive college, campus and group selection.
 
 ## Features
