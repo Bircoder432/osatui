@@ -42,6 +42,11 @@ async fn main() -> anyhow::Result<()> {
                                     eprintln!("Ошибка запуска селектора: {}", e);
                                 }
                             }
+                            KeyCode::Char('r') if key.modifiers.contains(KeyModifiers::SHIFT) => {
+                                if let Err(e) = app.reload_cache().await {
+                                    eprintln!("Ошибка перезагрузки кеша: {}", e);
+                                }
+                            }
                             KeyCode::F(1) => {
                                 if let Err(e) = app.prev_day().await {
                                     eprintln!("Ошибка перехода к предыдущему дню: {}", e);

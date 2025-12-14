@@ -1,4 +1,8 @@
-use crate::{cache::CacheManager, config::Config, utils::date::AppDate};
+use crate::{
+    cache::{self, CacheManager},
+    config::Config,
+    utils::date::AppDate,
+};
 use osars::{
     Client,
     models::{Campus, College, Group, Schedule},
@@ -219,7 +223,15 @@ impl ApiClient {
         self.group_id
     }
 
-    pub fn clear_cache(&mut self) {
+    pub async fn clear_cache(&mut self) -> anyhow::Result<()> {
+        let mut cache = self.cache.as_mut().ok_or("Менеджер кеша не найден");
+        match cache {
+            Ok(c) => c.clear().await?,
+            Err(e) => {
+                return Err(anyhow::Error::msg(e));
+            }
+        }
         self.lists_cache.clear();
+        Ok(())
     }
 }

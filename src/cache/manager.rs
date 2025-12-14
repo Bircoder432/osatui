@@ -32,4 +32,16 @@ impl CacheManager {
         tokio::fs::write(&path, content).await?;
         Ok(())
     }
+
+    pub async fn clear(&self) -> anyhow::Result<()> {
+        if self.dir.exists() {
+            for entry in std::fs::read_dir(&self.dir)? {
+                let entry = entry?;
+                if entry.path().extension().and_then(|s| s.to_str()) == Some("json") {
+                    tokio::fs::remove_file(entry.path()).await?;
+                }
+            }
+        }
+        Ok(())
+    }
 }

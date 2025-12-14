@@ -109,6 +109,16 @@ impl App {
         Ok(())
     }
 
+    pub async fn reload_cache(&mut self) -> anyhow::Result<()> {
+        if let Some(api) = &mut self.api {
+            api.clear_cache();
+
+            self.schedules = api.fetch(&self.date).await?;
+            println!("Кеш успешно очищен и перезагружен");
+        }
+        Ok(())
+    }
+
     pub fn start_setup(&mut self) {
         let mut state = SetupState::new();
         state.api_url = self.config.api_url().to_string();
