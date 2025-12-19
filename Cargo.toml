@@ -1,6 +1,6 @@
 [package]
 name = "osatui"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "Terminal UI client for educational schedule API with interactive college, campus and group selection"
 authors = ["Vadim <vadim@storozhiloff.ru>"]
@@ -19,8 +19,8 @@ include = [
 ]
 
 [[bin]]
-name = "gen_config"
-path = "src/bin/gen_config.rs"
+name = "osatui-gen-config"
+path = "src/bin/osatui-gen-config.rs"
 
 
 [dependencies]
