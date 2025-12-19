@@ -224,7 +224,7 @@ impl ApiClient {
     }
 
     pub async fn clear_cache(&mut self) -> anyhow::Result<()> {
-        let mut cache = self.cache.as_mut().ok_or("Менеджер кеша не найден");
+        let cache = self.cache.as_mut().ok_or("Менеджер кеша не найден");
         match cache {
             Ok(c) => c.clear().await?,
             Err(e) => {

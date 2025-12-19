@@ -1,3 +1,4 @@
+use crossterm::event::KeyCode;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
@@ -20,12 +21,24 @@ pub struct App {
     pub current_theme: String,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+pub struct KeyMap {
+    pub prev_day: KeyCode,
+    pub cur_day: KeyCode,
+    pub next_day: KeyCode,
+    pub selector: KeyCode,
+    pub settings: KeyCode,
+    pub exit: KeyCode,
+}
+
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct MainConfig {
     #[serde(rename = "api")]
     pub api: Api,
     #[serde(rename = "app")]
     pub app: App,
+    #[serde(rename = "keymap")]
+    pub keymap: KeyMap,
 }
 
 impl MainConfig {
@@ -61,7 +74,7 @@ impl MainConfig {
             .join("osatui/config.toml")
     }
 
-    fn default() -> Self {
+    pub fn default() -> Self {
         Self {
             api: Api {
                 url: "https://api.example.com".to_string(),
@@ -77,6 +90,14 @@ impl MainConfig {
                 cache_enabled: true,
                 cache_ttl: 3600,
                 current_theme: "dark".to_string(),
+            },
+            keymap: KeyMap {
+                prev_day: KeyCode::Left,
+                cur_day: KeyCode::Up,
+                next_day: KeyCode::Right,
+                selector: KeyCode::Char('o'),
+                settings: KeyCode::Char('s'),
+                exit: KeyCode::Char('q'),
             },
         }
     }

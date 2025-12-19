@@ -1,30 +1,25 @@
-mod api;
-mod app;
-mod cache;
-mod config;
-mod ui;
-mod utils;
-
-use app::App;
 use crossterm::{
     ExecutableCommand,
     event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
+use osatui::app::App;
+use osatui::{app, ui};
+use osatui::{cache::CacheManager, config::main::KeyMap};
 use ratatui::{Terminal, backend::CrosstermBackend};
 use std::io;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let config = config::Config::load().await?;
-    let mut app = App::new(config).await?;
+    let config = osatui::config::Config::load().await?;
+    let mut app = App::new(config.clone()).await?;
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     stdout.execute(EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-
+    let keymap: KeyMap = config.keymap();
     loop {
         terminal.draw(|f| ui::render(f, &app))?;
 
@@ -33,11 +28,11 @@ async fn main() -> anyhow::Result<()> {
                 if key.kind == KeyEventKind::Press {
                     match app.mode() {
                         app::AppMode::Normal => match key.code {
-                            KeyCode::Char('q') => app.quit(),
-                            KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                            kc if kc == keymap.exit => app.quit(),
+                            kc if kc == keymap.settings => {
                                 app.start_setup();
                             }
-                            KeyCode::Char('o') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                            kc if kc == keymap.selector => {
                                 if let Err(e) = app.start_selector().await {
                                     eprintln!("Ошибка запуска селектора: {}", e);
                                 }
@@ -47,17 +42,17 @@ async fn main() -> anyhow::Result<()> {
                                     eprintln!("Ошибка перезагрузки кеша: {}", e);
                                 }
                             }
-                            KeyCode::F(1) => {
+                            kc if kc == keymap.prev_day => {
                                 if let Err(e) = app.prev_day().await {
                                     eprintln!("Ошибка перехода к предыдущему дню: {}", e);
                                 }
                             }
-                            KeyCode::F(2) => {
+                            kc if kc == keymap.cur_day => {
                                 if let Err(e) = app.go_today().await {
                                     eprintln!("Ошибка перехода к сегодняшнему дню: {}", e);
                                 }
                             }
-                            KeyCode::F(3) => {
+                            kc if kc == keymap.next_day => {
                                 if let Err(e) = app.next_day().await {
                                     eprintln!("Ошибка перехода к следующему дню: {}", e);
                                 }

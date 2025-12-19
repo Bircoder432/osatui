@@ -1,5 +1,5 @@
 use crate::app::App;
-use ratatui::{prelude::*, widgets::*};
+use ratatui::{prelude::*, text::ToText, widgets::*};
 
 pub fn render(f: &mut Frame, app: &App, area: Rect) {
     let theme = app.theme();
@@ -66,8 +66,16 @@ fn render_schedule_table(f: &mut Frame, app: &App, area: Rect) {
 
 fn render_help(f: &mut Frame, app: &App, area: Rect) {
     let theme = app.theme();
-
-    let help_text = "F1: предыдущий день | F2: сегодня | F3: следующий день | Ctrl+O: выбор группы | Ctrl+S: настройки | Q: выход";
+    let keymap = app.config.keymap();
+    let help_text = format!(
+        "{}: предыдущий день | {}: сегодня | {}: следующий день | {}: выбор группы | {}: настройки | {}: выход",
+        keymap.prev_day.to_text(),
+        keymap.cur_day.to_text(),
+        keymap.next_day.to_text(),
+        keymap.selector.to_text(),
+        keymap.settings.to_text(),
+        keymap.exit.to_text()
+    );
 
     let help = Paragraph::new(help_text)
         .style(Style::default().fg(theme.color("table_header")))

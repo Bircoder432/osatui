@@ -1,8 +1,8 @@
 use ratatui::style::Color;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Theme {
     pub background: String,
     pub text: String,
@@ -33,7 +33,7 @@ impl Theme {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct ThemeConfig(HashMap<String, Theme>);
 
 impl ThemeConfig {
@@ -64,6 +64,22 @@ impl ThemeConfig {
             );
         }
         Ok(Self(themes))
+    }
+    pub fn default() -> Self {
+        let mut config: HashMap<String, Theme> = HashMap::new();
+        config.insert(
+            "dark".to_string(),
+            Theme {
+                background: "#1e1e1e".into(),
+                text: "#dcdcdc".into(),
+                header_bg: "#0064c8".into(),
+                header_fg: "#ffffff".into(),
+                table_header: "#ffff00".into(),
+                border: "#646464".into(),
+                highlight: "#00c800".into(),
+            },
+        );
+        return Self(config);
     }
 
     pub fn get(&self, name: &str) -> &Theme {

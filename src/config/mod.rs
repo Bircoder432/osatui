@@ -1,9 +1,14 @@
 pub mod main;
 pub mod theme;
 
+use ratatui::crossterm::event::KeyCode;
+use serde::{Deserialize, Serialize};
+
+use crate::config::main::KeyMap;
+
 use self::{main::MainConfig, theme::ThemeConfig};
 
-#[derive(Clone)]
+#[derive(Clone, Deserialize)]
 pub struct Config {
     main: MainConfig,
     themes: ThemeConfig,
@@ -14,6 +19,11 @@ impl Config {
         let main = MainConfig::load().await?;
         let themes = ThemeConfig::load().await?;
         Ok(Self { main, themes })
+    }
+    pub fn default() -> Self {
+        let main = MainConfig::default();
+        let themes = ThemeConfig::default();
+        Self { main, themes }
     }
 
     pub async fn save(&self) -> anyhow::Result<()> {
@@ -71,5 +81,8 @@ impl Config {
     pub fn set_group(&mut self, id: u32, name: Option<String>) {
         self.main.api.group_id = id;
         self.main.api.group_name = name;
+    }
+    pub fn keymap(&self) -> KeyMap {
+        self.main.keymap
     }
 }
