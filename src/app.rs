@@ -1,5 +1,6 @@
 use crate::{
     api::ApiClient,
+    cache::{self, CacheManager},
     config::Config,
     ui::{
         selector::{SelectionStage, SelectorState},
@@ -28,9 +29,13 @@ pub struct App {
 impl App {
     pub async fn new(config: Config) -> anyhow::Result<Self> {
         match ApiClient::new(config.clone()).await {
-            Ok(api) => {
+            Ok(mut api) => {
                 let date = AppDate::today();
-                let schedules = api.fetch(&date).await?;
+                let mut schedules = api.fetch(&date).await?;
+                if schedules[0].group_id != config.group_id() {
+                    api.clear_cache().await?;
+                    schedules = api.fetch(&date).await?;
+                }
                 Ok(Self {
                     config,
                     api: Some(api),
@@ -111,7 +116,7 @@ impl App {
 
     pub async fn reload_cache(&mut self) -> anyhow::Result<()> {
         if let Some(api) = &mut self.api {
-            api.clear_cache();
+            api.clear_cache().await?;
 
             self.schedules = api.fetch(&self.date).await?;
             println!("Кеш успешно очищен и перезагружен");
