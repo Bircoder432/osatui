@@ -32,9 +32,12 @@ impl App {
             Ok(mut api) => {
                 let date = AppDate::today();
                 let mut schedules = api.fetch(&date).await?;
-                if schedules[0].group_id != config.group_id() {
-                    api.clear_cache().await?;
-                    schedules = api.fetch(&date).await?;
+                println!("{:#?}", schedules);
+                if schedules.len() > 0 {
+                    if schedules[0].group_id != config.group_id() {
+                        api.clear_cache().await?;
+                        schedules = api.fetch(&date).await?;
+                    }
                 }
                 Ok(Self {
                     config,
