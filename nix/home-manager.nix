@@ -1,7 +1,7 @@
 {
   config,
-  lib,
   pkgs,
+  lib,
   ...
 }:
 
@@ -9,12 +9,14 @@ let
   cfg = config.programs.osatui;
 in
 {
+
   options.programs.osatui = {
-    enable = lib.mkEnableOption "osatui TUI client";
+    enable = lib.mkEnableOption "Enable the osatui TUI client";
 
     config = lib.mkOption {
       type = lib.types.attrs;
       default = { };
+      description = "osatui main config.toml options";
       example = {
         api = {
           url = "https://api.example.com";
@@ -30,12 +32,12 @@ in
           current_theme = "dark";
         };
       };
-      description = "osatui main config.toml";
     };
 
     theme = lib.mkOption {
       type = lib.types.attrs;
       default = { };
+      description = "osatui theme.toml options";
       example = {
         colors = {
           background = "#1e1e2e";
@@ -43,15 +45,14 @@ in
           accent = "#89b4fa";
         };
       };
-      description = "osatui theme.toml";
     };
   };
 
   config = lib.mkIf cfg.enable {
+
     home.packages = [ pkgs.osatui ];
 
     xdg.configFile."osatui/config.toml".text = lib.generators.toTOML { } cfg.config;
-
     xdg.configFile."osatui/theme.toml".text = lib.generators.toTOML { } cfg.theme;
   };
 }
