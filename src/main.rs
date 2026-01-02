@@ -3,6 +3,7 @@ use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
+use log::{debug, error, info, warn};
 use osatui::app::App;
 use osatui::{app, ui};
 use osatui::{cache::CacheManager, config::main::KeyMap};
@@ -11,7 +12,11 @@ use std::io;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    pretty_env_logger::init();
+    info!("Loading osatui");
     let config = osatui::config::Config::load().await?;
+    info!("Config loaded");
+    debug!("API url: {}", config.api_url());
     let mut app = App::new(config.clone()).await?;
 
     enable_raw_mode()?;

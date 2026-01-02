@@ -1,4 +1,5 @@
 use crossterm::event::KeyCode;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 
@@ -46,11 +47,13 @@ impl MainConfig {
         let path = Self::config_path();
 
         if path.exists() {
+            info!("config founded");
             let s = tokio::fs::read_to_string(&path).await?;
             let mut cfg: Self = toml::from_str(&s)?;
             cfg.api.url = cfg.api.url.trim_end_matches('/').to_string();
             Ok(cfg)
         } else {
+            warn!("config not founded use default");
             let default_config = Self::default();
             default_config.save().await?;
             Ok(default_config)
@@ -77,7 +80,7 @@ impl MainConfig {
     pub fn default() -> Self {
         Self {
             api: Api {
-                url: "https://api.example.com".to_string(),
+                url: "https://api.thisishyum.ru/schedule_api/tymen".to_string(),
                 college_id: 1,
                 college_name: None,
                 campus_id: 1,

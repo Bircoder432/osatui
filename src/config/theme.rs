@@ -1,3 +1,4 @@
+use log::debug;
 use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -42,11 +43,12 @@ impl ThemeConfig {
             .unwrap_or_else(|| ".".into())
             .join("osatui/theme.toml");
 
-        let s = if path.exists() {
-            tokio::fs::read_to_string(&path).await?
+        let mut s = String::new();
+        if !path.exists() {
+            Ok::<ThemeConfig, ()>(Self::default());
         } else {
-            tokio::fs::read_to_string("theme.toml").await?
-        };
+            s = tokio::fs::read_to_string(path).await?;
+        }
 
         let mut themes: HashMap<String, Theme> = toml::from_str(&s)?;
         if !themes.contains_key("dark") {

@@ -1,6 +1,7 @@
 pub mod main;
 pub mod theme;
 
+use log::debug;
 use ratatui::crossterm::event::KeyCode;
 use serde::{Deserialize, Serialize};
 
@@ -16,8 +17,12 @@ pub struct Config {
 
 impl Config {
     pub async fn load() -> anyhow::Result<Self> {
+        debug!("Loading main config");
         let main = MainConfig::load().await?;
+        debug!("Main config loaded");
+        debug!("Themes loading");
         let themes = ThemeConfig::load().await?;
+        debug!("Themes loaded");
         Ok(Self { main, themes })
     }
     pub fn default() -> Self {
