@@ -37,7 +37,7 @@
           ];
         };
 
-        homeModules.osatui = {
+        homeManagerModules.osatui = {
           source = ./nix/home-manager.nix;
         };
       }
