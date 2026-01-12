@@ -1,47 +1,45 @@
 {
-  description = "osatui Rust app + Home Manager module";
+  description = "osatui – terminal UI for student schedules";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    naersk.url = "github:nix-community/naersk";
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    naersk.url = "github:nmattia/naersk";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =
     {
-      self,
       nixpkgs,
       flake-utils,
       naersk,
-      home-manager,
+      ...
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = import nixpkgs { inherit system; };
-        nm = home-manager.lib.homeManagerConfiguration;
-      in
-      {
-        # Rust package через naersk
-        defaultPackage = pkgs.callPackage naersk { }.buildPackage {
-          src = ./.;
-        };
-
-        # devShell для разработки
-        devShell = pkgs.mkShell {
-          nativeBuildInputs = [
-            pkgs.rustc
-            pkgs.cargo
-            pkgs.pkg-config
-            pkgs.openssl
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [
+            (final: prev: {
+              osatui = final.callPackage ./nix/package.nix {
+                naersk = naersk.lib.${system};
+              };
+            })
           ];
         };
+      in
+      {
+        packages.default = pkgs.osatui;
+        packages.osatui = pkgs.osatui;
 
-        homeManagerModules.osatui = ./nix/home-manager.nix;
+        apps.default = {
+          type = "app";
+          program = "${pkgs.osatui}/bin/osatui";
+        };
+
+        homeManagerModules.osatui = import ./nix/home-manager.nix;
       }
     );
 }

@@ -1,31 +1,35 @@
 {
-  lib,
-  pkgs,
   config,
+  pkgs,
+  lib,
   ...
 }:
 
 let
-  osatuiCfg = config.osatui;
+  cfg = config.programs.osatui;
 in
 {
-  options.osatui = {
-    enable = lib.mkOption {
-      type = lib.types.bool;
-      default = true;
-      description = "Enable osatui configuration";
+  options.programs.osatui = {
+    enable = lib.mkEnableOption "osatui terminal UI";
+
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = config.packages.osatui;
+      description = "osatui package to use";
     };
 
     theme = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
+      type = lib.types.attrsOf lib.types.attrsOf lib.types.str;
       default = {
-        background = "#1e1e1e";
-        text = "#dcdcdc";
-        header_bg = "#0064c8";
-        header_fg = "#ffffff";
-        table_header = "#ffff00";
-        border = "#646464";
-        highlight = "#00c800";
+        dark = {
+          background = "#1e1e1e";
+          text = "#dcdcdc";
+          header_bg = "#0064c8";
+          header_fg = "#ffffff";
+          table_header = "#ffff00";
+          border = "#646464";
+          highlight = "#00c800";
+        };
       };
       description = "Theme colors for osatui";
     };
@@ -39,16 +43,19 @@ in
           campus_id = 1;
           group_id = 1;
         };
+
         app = {
           refresh_interval = 300;
           cache_enabled = true;
           cache_ttl = 3600;
           current_theme = "dark";
         };
+
         keymap = {
           prev_day = "Left";
           cur_day = "Up";
           next_day = "Right";
+
           selector = {
             Char = "o";
           };
@@ -64,9 +71,10 @@ in
     };
   };
 
-  # Если включено, создаем config файлы
-  config = lib.mkIf osatuiCfg.enable {
-    home.file.".config/osatui/config.toml".text = lib.toToml osatuiCfg.config;
-    home.file.".config/osatui/theme.toml".text = lib.toToml { dark = osatuiCfg.theme; };
+  config = lib.mkIf cfg.enable {
+    home.packages = [ cfg.package ];
+
+    home.file.".config/osatui/config.toml".text = lib.toToml cfg.config;
+    home.file.".config/osatui/theme.toml".text = lib.toToml cfg.theme;
   };
 }
