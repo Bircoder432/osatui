@@ -35,7 +35,7 @@ in
     };
 
     config = lib.mkOption {
-      type = lib.types.attrsOf lib.types.any;
+      type = lib.types.attrsOf lib.types.anything;
       default = {
         api = {
           url = "https://api.example.com";
