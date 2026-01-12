@@ -5,7 +5,10 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     naersk.url = "github:nix-community/naersk";
-    home-manager.url = "github:nix-community/home-manager";
+    home-manager.url = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -20,25 +23,30 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-        naersk' = pkgs.callPackage naersk { };
+        nm = home-manager.lib.homeManagerConfiguration;
       in
-      rec {
-
-        defaultPackage = naersk'.buildPackage {
+      {
+        # Rust package через naersk
+        defaultPackage = pkgs.callPackage naersk { }.buildPackage {
           src = ./.;
         };
 
+        # devShell для разработки
         devShell = pkgs.mkShell {
           nativeBuildInputs = [
             pkgs.rustc
             pkgs.cargo
-            pkgs.openssl
             pkgs.pkg-config
+            pkgs.openssl
           ];
         };
 
-        homeManagerModules.osatui = {
-          source = ./nix/home-manager.nix;
+        # home-manager модуль
+        homeConfigurations.osatui = nm {
+          pkgs = pkgs;
+          modules = [ ./nix/home-manager.nix ];
+          homeDirectory = "/home/${builtins.getEnv "USER"}";
+          username = builtins.getEnv "USER";
         };
       }
     );

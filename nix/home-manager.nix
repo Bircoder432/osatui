@@ -27,7 +27,7 @@ in
         border = "#646464";
         highlight = "#00c800";
       };
-      description = "Theme colors for osatui, can override any color";
+      description = "Theme colors for osatui";
     };
 
     config = lib.mkOption {
@@ -64,6 +64,7 @@ in
     };
   };
 
+  # Если включено, создаем config файлы
   config = lib.mkIf osatuiCfg.enable {
     home.file.".config/osatui/config.toml".text = lib.toToml osatuiCfg.config;
     home.file.".config/osatui/theme.toml".text = lib.toToml { dark = osatuiCfg.theme; };
