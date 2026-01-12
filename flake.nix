@@ -41,13 +41,7 @@
           ];
         };
 
-        # home-manager модуль
-        homeConfigurations.osatui = nm {
-          pkgs = pkgs;
-          modules = [ ./nix/home-manager.nix ];
-          homeDirectory = "/home/${builtins.getEnv "USER"}";
-          username = builtins.getEnv "USER";
-        };
+        homeManagerModules.osatui = ./nix/home-manager.nix;
       }
     );
 }
