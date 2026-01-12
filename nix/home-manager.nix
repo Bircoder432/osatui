@@ -19,7 +19,7 @@ in
     };
 
     theme = lib.mkOption {
-      type = lib.types.attrsOf lib.types.attrsOf lib.types.str;
+      type = lib.types.attrsOf lib.types.attrsOfString;
       default = {
         dark = {
           background = "#1e1e1e";
