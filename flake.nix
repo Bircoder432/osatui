@@ -1,41 +1,44 @@
 {
+  description = "osatui Rust app + Home Manager module";
+
   inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     naersk.url = "github:nix-community/naersk";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    home-manager.url = "github:nix-community/home-manager";
   };
 
   outputs =
     {
       self,
+      nixpkgs,
       flake-utils,
       naersk,
-      nixpkgs,
+      home-manager,
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = (import nixpkgs) {
-          inherit system;
-        };
-
+        pkgs = import nixpkgs { inherit system; };
         naersk' = pkgs.callPackage naersk { };
-
       in
       rec {
-        # For `nix build` & `nix run`:
+
         defaultPackage = naersk'.buildPackage {
           src = ./.;
         };
 
-        # For `nix develop` (optional, can be skipped):
         devShell = pkgs.mkShell {
-          nativeBuildInputs = with pkgs; [
-            rustc
-            cargo
-            openssl
-            pkg-config
+          nativeBuildInputs = [
+            pkgs.rustc
+            pkgs.cargo
+            pkgs.openssl
+            pkgs.pkg-config
           ];
+        };
+
+        homeModules.osatui = {
+          source = ./nix/home-manager.nix;
         };
       }
     );
