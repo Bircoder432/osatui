@@ -10,7 +10,7 @@ let
 in
 {
   options.programs.osatui = {
-    enable = lib.mkEnableOption "osatui terminal UI";
+    enable = lib.mkEnableOption "Enable osatui terminal UI";
 
     package = lib.mkOption {
       type = lib.types.package;
@@ -72,9 +72,48 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    # Устанавливаем бинарь
     home.packages = [ cfg.package ];
 
-    home.file.".config/osatui/config.toml".text = lib.toToml cfg.config;
-    home.file.".config/osatui/theme.toml".text = lib.toToml cfg.theme;
+    # Генерация config.toml
+    home.file.".config/osatui/config.toml".text = ''
+      [api]
+      url = "${cfg.config.api.url}"
+      college_id = ${toString cfg.config.api.college_id}
+      campus_id  = ${toString cfg.config.api.campus_id}
+      group_id   = ${toString cfg.config.api.group_id}
+
+      [app]
+      refresh_interval = ${toString cfg.config.app.refresh_interval}
+      cache_enabled    = ${toString cfg.config.app.cache_enabled}
+      cache_ttl        = ${toString cfg.config.app.cache_ttl}
+      current_theme    = "${cfg.config.app.current_theme}"
+
+      [keymap]
+      prev_day = "${cfg.config.keymap.prev_day}"
+      cur_day  = "${cfg.config.keymap.cur_day}"
+      next_day = "${cfg.config.keymap.next_day}"
+
+      [keymap.selector]
+      Char = "${cfg.config.keymap.selector.Char}"
+
+      [keymap.settings]
+      Char = "${cfg.config.keymap.settings.Char}"
+
+      [keymap.exit]
+      Char = "${cfg.config.keymap.exit.Char}"
+    '';
+
+    # Генерация theme.toml
+    home.file.".config/osatui/theme.toml".text = ''
+      [dark]
+      background   = "${cfg.theme.dark.background}"
+      text         = "${cfg.theme.dark.text}"
+      header_bg    = "${cfg.theme.dark.header_bg}"
+      header_fg    = "${cfg.theme.dark.header_fg}"
+      table_header = "${cfg.theme.dark.table_header}"
+      border       = "${cfg.theme.dark.border}"
+      highlight    = "${cfg.theme.dark.highlight}"
+    '';
   };
 }
