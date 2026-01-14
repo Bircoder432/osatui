@@ -16,6 +16,7 @@ let
   cfg = config.programs.osatui;
   tomlFormat = pkgs.formats.toml { };
 
+  # Дефолтная тема
   defaultTheme = {
     dark = {
       background = "#1e1e1e";
@@ -59,6 +60,16 @@ let
       };
     };
   };
+
+  getTheme =
+    theme:
+    if theme == null then
+      null
+    else if theme == "default" then
+      defaultTheme
+    else
+      theme;
+
 in
 {
   options.programs.osatui = {
@@ -68,16 +79,15 @@ in
 
     theme = mkOption {
       type = tomlFormat.type;
-      default = defaultTheme;
+      default = null;
       example = literalExpression ''
         {
           dark = {
             background = "#000000";
             text = "#ffffff";
           }
-        }
       '';
-      description = "Theme colors for osatui";
+      description = "Theme colors for osatui. Set null to disable generation, or 'default' to use the built-in default theme.";
     };
 
     settings = mkOption {
@@ -93,6 +103,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+
     home.packages = lib.mkIf (cfg.package != null) [ cfg.package ];
 
     xdg.configFile."osatui/config.toml" = {
@@ -101,8 +112,10 @@ in
       );
     };
 
-    xdg.configFile."osatui/theme.toml" = {
-      source = tomlFormat.generate "theme.toml" (lib.recursiveUpdate defaultTheme (cfg.theme or { }));
-    };
+    home.file = lib.optionalAttrs (getTheme cfg.theme != null) ({
+      ".config/osatui/theme.toml".text = tomlFormat.generate "theme.toml" (
+        lib.recursiveUpdate defaultTheme (if cfg.theme == "default" then { } else cfg.theme)
+      );
+    });
   };
 }
