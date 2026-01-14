@@ -13,7 +13,57 @@ Terminal UI client for educational schedule API with interactive college, campus
 
 ## Installation
 
+- *via cargo*
 `cargo install osatui`
+- *via nix*
+  *flake.nix*
+  ```nix
+    {
+      inputs = {
+        osatui.url = "github:Bircoder432/osatui"
+      };
+
+      outputs = {self, ... }@inputs:
+      {
+        nixosConfigurations = {
+          your = nixpkgs.lib.nixosSystem {
+            specialArgs = { inherit inputs; };
+            modules = [
+              # ...
+              home-manager.nixosModules.home-manager
+              {
+                home-manager.extraSpecialArgs = { inherit inputs; };
+              }
+            ];
+          };
+        };
+      };
+    }
+  ```
+
+  *home manage*
+  ```nix
+    { conifg, pkgs, inputs, ... }:
+
+    {
+      imports = [ inputs.osatui.homeManagerModules.your-system.osatui ];
+      programs.osatui.enable = true;
+      programs.osatui.package = inputs.osatui.packages.${pkgs.system}.osatui;
+      programs.osatui.settings = {
+        api = {
+          url = "https://your.api-provider.com"; # Your OpenScheduleApi provider
+          college_id = 1; # ID of your college in api
+          campus_id = 1; # ID of your campus
+          group_id = 161; # ID of your group
+        };
+        keymap = {
+          prev_day = "Left"; # Key for move to previous day
+          cur_day = "Up"; # Key for move to current day
+          next_day = "Right"; # Key for move to next day
+        };
+      };
+    }
+  ```
 
 ## Usage
 
