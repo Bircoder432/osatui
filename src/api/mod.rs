@@ -89,9 +89,10 @@ impl ApiClient {
         // Очищаем старый кэш если группа изменилась
         if old_group_id != Some(group_id)
             && let Some(cache) = &self.cache
-                && let Some(old_gid) = old_group_id {
-                    cache.clear_group(old_gid).await?;
-                }
+            && let Some(old_gid) = old_group_id
+        {
+            cache.clear_group(old_gid).await?;
+        }
 
         Ok(())
     }
@@ -220,9 +221,10 @@ impl ApiClient {
 
     pub async fn fetch(&self, date: &AppDate) -> anyhow::Result<Vec<Schedule>> {
         if let Some(cache) = &self.cache
-            && let Some(data) = cache.get(date).await? {
-                return Ok(data);
-            }
+            && let Some(data) = cache.get(date).await?
+        {
+            return Ok(data);
+        }
 
         let group_id = self
             .group_id

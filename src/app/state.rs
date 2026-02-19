@@ -133,10 +133,11 @@ impl AppState {
 
     pub fn clear_error_if_expired(&mut self) {
         if let Some(timeout) = self.error_timeout
-            && std::time::Instant::now() > timeout {
-                self.error_message = None;
-                self.error_timeout = None;
-            }
+            && std::time::Instant::now() > timeout
+        {
+            self.error_message = None;
+            self.error_timeout = None;
+        }
     }
 
     // Navigation helpers

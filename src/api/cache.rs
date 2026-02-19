@@ -98,9 +98,10 @@ impl CacheManager {
         while let Some(entry) = entries.next_entry().await? {
             let path = entry.path();
             if let Some(name) = path.file_stem().and_then(|s| s.to_str())
-                && name.starts_with(&prefix) {
-                    tokio::fs::remove_file(path).await?;
-                }
+                && name.starts_with(&prefix)
+            {
+                tokio::fs::remove_file(path).await?;
+            }
         }
 
         Ok(())

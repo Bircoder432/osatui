@@ -6,8 +6,7 @@ use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Config {
     #[serde(flatten)]
     inner: ConfigData,
@@ -156,7 +155,6 @@ impl Config {
         self.inner.api.group_name = name;
     }
 }
-
 
 impl Default for ConfigData {
     fn default() -> Self {

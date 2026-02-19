@@ -48,11 +48,12 @@ async fn run_app(
 
         if crossterm::event::poll(timeout)?
             && let Event::Key(key) = event::read()?
-                && key.kind == KeyEventKind::Press
-                    && let Err(e) = app.handle_key_event(key).await {
-                        log::error!("Error handling key event: {}", e);
-                        app.set_error_message(format!("Error: {}", e));
-                    }
+            && key.kind == KeyEventKind::Press
+            && let Err(e) = app.handle_key_event(key).await
+        {
+            log::error!("Error handling key event: {}", e);
+            app.set_error_message(format!("Error: {}", e));
+        }
 
         if last_tick.elapsed() >= tick_rate {
             last_tick = tokio::time::Instant::now();

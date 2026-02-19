@@ -1,9 +1,9 @@
 use crate::app::{App, AppState};
 use ratatui::{
+    Frame,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
-    Frame,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -55,30 +55,51 @@ fn render_list(f: &mut Frame, state: &AppState, area: Rect) {
     let theme = state.config.theme();
 
     let items: Vec<ListItem> = match state.selection_stage {
-        SelectionStage::College => state.colleges.iter().enumerate().map(|(i, c)| {
-            let style = if i == state.selected_index {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-            } else {
-                Style::default()
-            };
-            ListItem::new(format!("{} (ID: {})", c.name, c.college_id)).style(style)
-        }).collect(),
-        SelectionStage::Campus => state.campuses.iter().enumerate().map(|(i, c)| {
-            let style = if i == state.selected_index {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-            } else {
-                Style::default()
-            };
-            ListItem::new(format!("{} (ID: {})", c.name, c.id)).style(style)
-        }).collect(),
-        SelectionStage::Group => state.groups.iter().enumerate().map(|(i, g)| {
-            let style = if i == state.selected_index {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-            } else {
-                Style::default()
-            };
-            ListItem::new(format!("{} (ID: {})", g.name, g.id)).style(style)
-        }).collect(),
+        SelectionStage::College => state
+            .colleges
+            .iter()
+            .enumerate()
+            .map(|(i, c)| {
+                let style = if i == state.selected_index {
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default()
+                };
+                ListItem::new(format!("{} (ID: {})", c.name, c.college_id)).style(style)
+            })
+            .collect(),
+        SelectionStage::Campus => state
+            .campuses
+            .iter()
+            .enumerate()
+            .map(|(i, c)| {
+                let style = if i == state.selected_index {
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default()
+                };
+                ListItem::new(format!("{} (ID: {})", c.name, c.id)).style(style)
+            })
+            .collect(),
+        SelectionStage::Group => state
+            .groups
+            .iter()
+            .enumerate()
+            .map(|(i, g)| {
+                let style = if i == state.selected_index {
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::BOLD)
+                } else {
+                    Style::default()
+                };
+                ListItem::new(format!("{} (ID: {})", g.name, g.id)).style(style)
+            })
+            .collect(),
     };
 
     let list = List::new(items)
@@ -98,12 +119,21 @@ fn render_info(f: &mut Frame, state: &AppState, area: Rect) {
         SelectionStage::College => "Select a college from the list".to_string(),
         SelectionStage::Campus => format!(
             "College: {}",
-            state.selected_college.as_ref().map_or("Not selected", |c| &c.name)
+            state
+                .selected_college
+                .as_ref()
+                .map_or("Not selected", |c| &c.name)
         ),
         SelectionStage::Group => format!(
             "College: {}, Campus: {}",
-            state.selected_college.as_ref().map_or("Not selected", |c| &c.name),
-            state.selected_campus.as_ref().map_or("Not selected", |c| &c.name)
+            state
+                .selected_college
+                .as_ref()
+                .map_or("Not selected", |c| &c.name),
+            state
+                .selected_campus
+                .as_ref()
+                .map_or("Not selected", |c| &c.name)
         ),
     };
 
