@@ -64,7 +64,7 @@ jobs:
           path: target/aarch64-apple-darwin/release/osatui-macos-arm64.tar.gz
 
   release:
-    needs: [build-linux, build-macos-intel, build-macos-arm]
+    needs: [build-linux, build-macos-arm]
     runs-on: ubuntu-latest
     permissions:
       contents: write
