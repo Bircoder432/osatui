@@ -1,87 +1,61 @@
 use crossterm::{
     ExecutableCommand,
-    event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
+    event::{self, Event, KeyEventKind},
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use log::{debug, error, info, warn};
-use osatui::app::App;
-use osatui::{app, ui};
-use osatui::{cache::CacheManager, config::main::KeyMap};
+use log::info;
+use osatui::{app::App, config::Config};
 use ratatui::{Terminal, backend::CrosstermBackend};
 use std::io;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     pretty_env_logger::init();
-    info!("Loading osatui");
-    let config = osatui::config::Config::load().await?;
-    info!("Config loaded");
-    debug!("API url: {}", config.api_url());
-    let mut app = App::new(config.clone()).await?;
+
+    info!("Starting osatui v{}", env!("CARGO_PKG_VERSION"));
+
+    let config = Config::load().await?;
+    info!("Configuration loaded successfully");
+
+    let mut app = App::new(config).await?;
+    info!("Application initialized");
 
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     stdout.execute(EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-    let keymap: KeyMap = config.keymap();
-    loop {
-        terminal.draw(|f| ui::render(f, &app))?;
 
-        if event::poll(std::time::Duration::from_millis(100))? {
-            if let Event::Key(key) = event::read()? {
-                if key.kind == KeyEventKind::Press {
-                    match app.mode() {
-                        app::AppMode::Normal => match key.code {
-                            kc if kc == keymap.exit => app.quit(),
-                            kc if kc == keymap.settings => {
-                                app.start_setup();
-                            }
-                            kc if kc == keymap.selector => {
-                                if let Err(e) = app.start_selector().await {
-                                    eprintln!("Ошибка запуска селектора: {}", e);
-                                }
-                            }
-                            KeyCode::Char('r') if key.modifiers.contains(KeyModifiers::SHIFT) => {
-                                if let Err(e) = app.reload_cache().await {
-                                    eprintln!("Ошибка перезагрузки кеша: {}", e);
-                                }
-                            }
-                            kc if kc == keymap.prev_day => {
-                                if let Err(e) = app.prev_day().await {
-                                    eprintln!("Ошибка перехода к предыдущему дню: {}", e);
-                                }
-                            }
-                            kc if kc == keymap.cur_day => {
-                                if let Err(e) = app.go_today().await {
-                                    eprintln!("Ошибка перехода к сегодняшнему дню: {}", e);
-                                }
-                            }
-                            kc if kc == keymap.next_day => {
-                                if let Err(e) = app.next_day().await {
-                                    eprintln!("Ошибка перехода к следующему дню: {}", e);
-                                }
-                            }
-                            _ => {}
-                        },
-                        app::AppMode::Setup(_) => {}
-                        app::AppMode::Selector(_) => match key.code {
-                            KeyCode::Enter => {
-                                if let Err(e) = app.handle_selector_input().await {
-                                    eprintln!("Ошибка обработки выбора: {}", e);
-                                }
-                            }
-                            KeyCode::Down | KeyCode::Up | KeyCode::Right | KeyCode::Left => {
-                                app.handle_selector_navigation(key.code).await;
-                            }
-                            KeyCode::Esc => {
-                                *app.mode_mut() = app::AppMode::Normal;
-                            }
-                            _ => {}
-                        },
+    let result = run_app(&mut terminal, &mut app).await;
+
+    disable_raw_mode()?;
+    terminal.backend_mut().execute(LeaveAlternateScreen)?;
+
+    result
+}
+
+async fn run_app(
+    terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
+    app: &mut App,
+) -> anyhow::Result<()> {
+    let mut last_tick = tokio::time::Instant::now();
+    let tick_rate = tokio::time::Duration::from_millis(250);
+
+    loop {
+        terminal.draw(|f| osatui::ui::render(f, app))?;
+
+        let timeout = tick_rate.saturating_sub(last_tick.elapsed());
+
+        if crossterm::event::poll(timeout)?
+            && let Event::Key(key) = event::read()?
+                && key.kind == KeyEventKind::Press
+                    && let Err(e) = app.handle_key_event(key).await {
+                        log::error!("Error handling key event: {}", e);
+                        app.set_error_message(format!("Error: {}", e));
                     }
-                }
-            }
+
+        if last_tick.elapsed() >= tick_rate {
+            last_tick = tokio::time::Instant::now();
         }
 
         if app.should_quit() {
@@ -89,7 +63,5 @@ async fn main() -> anyhow::Result<()> {
         }
     }
 
-    disable_raw_mode()?;
-    terminal.backend_mut().execute(LeaveAlternateScreen)?;
     Ok(())
 }

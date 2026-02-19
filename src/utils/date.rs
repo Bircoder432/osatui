@@ -19,11 +19,11 @@ impl AppDate {
     pub fn format(&self) -> String {
         let today = Utc::now().date_naive();
         if self.0 == today {
-            "Сегодня".into()
+            "Today".into()
         } else if self.0 == today + Duration::days(1) {
-            "Завтра".into()
+            "Tomorrow".into()
         } else if self.0 == today - Duration::days(1) {
-            "Вчера".into()
+            "Yesterday".into()
         } else {
             self.0.format("%d %B %Y").to_string()
         }
@@ -31,5 +31,17 @@ impl AppDate {
 
     pub fn iso(&self) -> String {
         self.0.format("%d-%m-%Y").to_string()
+    }
+}
+
+impl From<NaiveDate> for AppDate {
+    fn from(date: NaiveDate) -> Self {
+        Self(date)
+    }
+}
+
+impl From<AppDate> for NaiveDate {
+    fn from(date: AppDate) -> Self {
+        date.0
     }
 }
