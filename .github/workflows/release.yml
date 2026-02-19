@@ -39,31 +39,6 @@ jobs:
           name: linux-x86_64
           path: target/release/osatui-linux-x86_64.tar.gz
 
-  build-macos-intel:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: Build release
-        run: cargo build --release --bin osatui
-      
-      - name: Strip binary
-        run: strip target/release/osatui
-      
-      - name: Create archive
-        run: |
-          cd target/release
-          tar czf osatui-macos-x86_64.tar.gz osatui
-      
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-x86_64
-          path: target/release/osatui-macos-x86_64.tar.gz
-
   build-macos-arm:
     runs-on: macos-14
     steps:
