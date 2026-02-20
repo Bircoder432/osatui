@@ -210,7 +210,13 @@ impl ApiClient {
             }
         }
 
-        let data = fetch().await?;
+        let data = match fetch().await {
+            Ok(d) => d,
+            Err(e) => {
+                log::error!("Error: {}, in fetch data\nplease check base url", e);
+                std::process::exit(1);
+            }
+        };
         let serialized = serde_json::to_vec(&data)?;
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
         self.lists_cache
@@ -244,6 +250,7 @@ impl ApiClient {
                 if err_str.contains("null") || err_str.contains("expected a sequence") {
                     Vec::new()
                 } else {
+                    log::error!("Error in loading schedules: {}", e);
                     return Err(e.into());
                 }
             }

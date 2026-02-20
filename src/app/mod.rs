@@ -14,11 +14,13 @@ pub struct App {
 
 impl App {
     pub async fn new(config: Config) -> anyhow::Result<Self> {
+        log::debug!("Loading application");
         let mut state = AppState::new(config.clone());
 
         match ApiClient::new(config.clone()).await {
             Ok(api) => {
                 state.load_schedules(&api).await?;
+                log::info!("Schedules loaded succesful");
                 Ok(Self {
                     config,
                     state,

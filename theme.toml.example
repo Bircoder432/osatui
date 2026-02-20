@@ -1,4 +1,3 @@
-[dark]
 background = "#1e1e1e"
 text = "#dcdcdc"
 header_bg = "#0064c8"
@@ -6,3 +5,4 @@ header_fg = "#ffffff"
 table_header = "#ffff00"
 border = "#646464"
 highlight = "#00c800"
+error = "#ff0000"

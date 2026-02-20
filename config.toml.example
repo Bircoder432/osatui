@@ -1,5 +1,5 @@
 [api]
-url = "https://api.example.com"
+url = "https://api.thisishyum.ru/schedule_api/tyumen"
 college_id = 1
 campus_id = 1
 group_id = 1
@@ -14,12 +14,6 @@ current_theme = "dark"
 prev_day = "Left"
 cur_day = "Up"
 next_day = "Right"
-
-[keymap.selector]
-Char = "o"
-
-[keymap.settings]
-Char = "s"
-
-[keymap.exit]
-Char = "q"
+selector = "o"
+settings = "s"
+exit = "q"

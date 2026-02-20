@@ -1,7 +1,10 @@
 pub mod keymap;
 pub mod theme;
 
-use crate::config::{keymap::KeyMap, theme::Theme};
+use crate::config::{
+    keymap::KeyMap,
+    theme::{Theme, ThemeManager},
+};
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -59,10 +62,23 @@ impl Config {
             config.save().await?;
             return Ok(config);
         };
+        let theme_name = &data.app.current_theme;
+        log::info!("Loading theme {}", &theme_name);
+        let theme = match ThemeManager::load().await {
+            Ok(tm) => {
+                log::info!("Theme {} loaded succesful", &theme_name);
+                tm.get(&theme_name).unwrap_or(&Theme::default()).clone()
+            }
+            Err(e) => {
+                log::warn!("Theme {} loading failed, Error: {}", &theme_name, e);
+                Theme::default()
+            }
+        };
 
-        let theme = Theme::default(); // Always use default theme for now
-
-        Ok(Self { inner: data, theme })
+        Ok(Self {
+            inner: data,
+            theme: theme.clone(),
+        })
     }
 
     pub async fn save(&self) -> anyhow::Result<()> {

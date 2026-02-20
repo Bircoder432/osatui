@@ -79,7 +79,6 @@ impl ThemeManager {
 
         Ok(Self { themes })
     }
-
     pub fn get(&self, name: &str) -> Option<&Theme> {
         self.themes.get(name)
     }
