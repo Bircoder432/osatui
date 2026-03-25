@@ -1,6 +1,6 @@
 [package]
 name = "osatui"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 description = "Terminal UI client for educational schedule API with interactive college, campus and group selection"
 authors = ["Vadim <vadim@storozhiloff.ru>"]

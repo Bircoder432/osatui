@@ -1,7 +1,10 @@
 pub mod keymap;
 pub mod theme;
 
-use crate::config::{keymap::KeyMap, theme::Theme};
+use crate::config::{
+    keymap::KeyMap,
+    theme::{Theme, ThemeManager},
+};
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -60,9 +63,17 @@ impl Config {
             return Ok(config);
         };
 
-        let theme = Theme::default(); // Always use default theme for now
+        let theme: Theme = ThemeManager::load()
+            .await
+            .unwrap_or_default()
+            .get(&data.app.current_theme)
+            .unwrap_or_default()
+            .clone();
 
-        Ok(Self { inner: data, theme })
+        Ok(Self {
+            inner: data,
+            theme: theme,
+        })
     }
 
     pub async fn save(&self) -> anyhow::Result<()> {

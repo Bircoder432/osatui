@@ -66,6 +66,14 @@ pub struct ThemeManager {
     themes: HashMap<String, Theme>,
 }
 
+impl Default for ThemeManager {
+    fn default() -> Self {
+        let mut themes = HashMap::new();
+        themes.insert("default".to_string(), Theme::default());
+        Self { themes }
+    }
+}
+
 impl ThemeManager {
     pub async fn load() -> anyhow::Result<Self> {
         let path = Self::theme_path();
@@ -80,8 +88,8 @@ impl ThemeManager {
         Ok(Self { themes })
     }
 
-    pub fn get(&self, name: &str) -> Option<&Theme> {
-        self.themes.get(name)
+    pub fn get(&self, name: &str) -> Option<Theme> {
+        self.themes.get(name).cloned()
     }
 
     fn theme_path() -> PathBuf {
