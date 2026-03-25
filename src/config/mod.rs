@@ -70,10 +70,7 @@ impl Config {
             .unwrap_or_default()
             .clone();
 
-        Ok(Self {
-            inner: data,
-            theme: theme,
-        })
+        Ok(Self { inner: data, theme })
     }
 
     pub async fn save(&self) -> anyhow::Result<()> {
