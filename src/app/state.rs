@@ -32,7 +32,7 @@ pub struct AppState {
     pub setup_api_url: String,
     pub setup_college_id: String,
     pub setup_campus_id: String,
-    pub setup_group_name: String,
+    pub setup_group_id: String,
 
     // Error display
     pub error_message: Option<String>,
@@ -44,7 +44,7 @@ pub enum SetupField {
     ApiUrl,
     CollegeId,
     CampusId,
-    GroupName,
+    GroupId,
 }
 
 impl AppState {
@@ -67,7 +67,7 @@ impl AppState {
             setup_api_url: String::new(),
             setup_college_id: String::new(),
             setup_campus_id: String::new(),
-            setup_group_name: String::new(),
+            setup_group_id: String::new(),
             error_message: None,
             error_timeout: None,
         }
@@ -118,7 +118,7 @@ impl AppState {
         self.setup_api_url = self.config.api_url().to_string();
         self.setup_college_id = self.config.college_id().to_string();
         self.setup_campus_id = self.config.campus_id().to_string();
-        self.setup_group_name = self.config.group_name().unwrap_or("").to_string();
+        self.setup_group_id = self.config.group_id().to_string();
     }
 
     pub fn enter_normal(&mut self) {

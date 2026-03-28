@@ -28,11 +28,8 @@ struct ConfigData {
 struct ApiConfig {
     url: String,
     college_id: u32,
-    college_name: Option<String>,
     campus_id: u32,
-    campus_name: Option<String>,
     group_id: u32,
-    group_name: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -107,24 +104,12 @@ impl Config {
         self.inner.api.college_id
     }
 
-    pub fn college_name(&self) -> Option<&str> {
-        self.inner.api.college_name.as_deref()
-    }
-
     pub fn campus_id(&self) -> u32 {
         self.inner.api.campus_id
     }
 
-    pub fn campus_name(&self) -> Option<&str> {
-        self.inner.api.campus_name.as_deref()
-    }
-
     pub fn group_id(&self) -> u32 {
         self.inner.api.group_id
-    }
-
-    pub fn group_name(&self) -> Option<&str> {
-        self.inner.api.group_name.as_deref()
     }
 
     pub fn cache_enabled(&self) -> bool {
@@ -148,19 +133,16 @@ impl Config {
         self.inner.api.url = url.trim_end_matches('/').to_string();
     }
 
-    pub fn set_college(&mut self, id: u32, name: Option<String>) {
+    pub fn set_college(&mut self, id: u32) {
         self.inner.api.college_id = id;
-        self.inner.api.college_name = name;
     }
 
-    pub fn set_campus(&mut self, id: u32, name: Option<String>) {
+    pub fn set_campus(&mut self, id: u32) {
         self.inner.api.campus_id = id;
-        self.inner.api.campus_name = name;
     }
 
-    pub fn set_group(&mut self, id: u32, name: Option<String>) {
+    pub fn set_group(&mut self, id: u32) {
         self.inner.api.group_id = id;
-        self.inner.api.group_name = name;
     }
 }
 
@@ -170,11 +152,8 @@ impl Default for ConfigData {
             api: ApiConfig {
                 url: "https://api.thisishyum.ru/schedule_api/tyumen".to_string(),
                 college_id: 1,
-                college_name: None,
                 campus_id: 1,
-                campus_name: None,
                 group_id: 1,
-                group_name: None,
             },
             app: AppConfig {
                 refresh_interval: 300,

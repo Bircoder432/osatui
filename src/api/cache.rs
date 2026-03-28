@@ -1,4 +1,5 @@
 use crate::utils::AppDate;
+use log::{debug, info};
 use osars::models::Schedule;
 use std::path::PathBuf;
 use std::time::SystemTime;
@@ -11,12 +12,14 @@ pub struct CacheManager {
 
 impl CacheManager {
     pub async fn new(ttl: u64) -> anyhow::Result<Self> {
+        info!("Initializing CacheManager with TTL: {}", ttl);
         let dir = dirs::cache_dir()
             .unwrap_or_else(|| ".".into())
             .join("osatui");
+        debug!("Cache directory: {:?}", dir);
 
         tokio::fs::create_dir_all(&dir).await?;
-
+        debug!("Cache directory created: {:?}", dir);
         Ok(Self {
             dir,
             ttl,

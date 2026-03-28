@@ -64,7 +64,7 @@ async fn handle_normal_mode(app: &mut App, key: KeyEvent) -> anyhow::Result<()> 
             app.state_mut().schedules = schedules;
         }
         KeyCode::Char('r') if key.modifiers.contains(KeyModifiers::SHIFT) => {
-            let date = app.state().current_date; // <-- ИСПРАВЛЕНО: получаем date ДО api_mut()
+            let date = app.state().current_date;
             if let Some(api) = app.api_mut() {
                 api.clear_cache().await?;
                 let schedules = api.fetch(&date).await?;
@@ -134,18 +134,12 @@ async fn handle_selector_selection(app: &mut App) -> anyhow::Result<()> {
 
             if let Some(group) = group {
                 if let Some(ref college) = college {
-                    app.state_mut()
-                        .config
-                        .set_college(college.college_id, Some(college.name.clone()));
+                    app.state_mut().config.set_college(college.college_id);
                 }
                 if let Some(ref campus) = campus {
-                    app.state_mut()
-                        .config
-                        .set_campus(campus.id, Some(campus.name.clone()));
+                    app.state_mut().config.set_campus(campus.id);
                 }
-                app.state_mut()
-                    .config
-                    .set_group(group.id, Some(group.name.clone()));
+                app.state_mut().config.set_group(group.id);
                 app.state_mut().config.save().await?;
 
                 let new_api = ApiClient::new(app.state().config.clone()).await?;
@@ -173,12 +167,11 @@ async fn handle_setup_mode(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
             let url = state.setup_api_url.trim().to_string();
             let college_id = state.setup_college_id.parse().unwrap_or(1);
             let campus_id = state.setup_campus_id.parse().unwrap_or(1);
-            let group_name = state.setup_group_name.trim().to_string();
 
             app.state_mut().config.set_api_url(url);
-            app.state_mut().config.set_college(college_id, None);
-            app.state_mut().config.set_campus(campus_id, None);
-            app.state_mut().config.set_group(0, Some(group_name));
+            app.state_mut().config.set_college(college_id);
+            app.state_mut().config.set_campus(campus_id);
+            app.state_mut().config.set_group(0);
 
             app.state_mut().config.save().await?;
             app.reload_api().await?;
@@ -188,23 +181,23 @@ async fn handle_setup_mode(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
             app.state_mut().setup_field = match app.state().setup_field {
                 SetupField::ApiUrl => SetupField::CollegeId,
                 SetupField::CollegeId => SetupField::CampusId,
-                SetupField::CampusId => SetupField::GroupName,
-                SetupField::GroupName => SetupField::ApiUrl,
+                SetupField::CampusId => SetupField::GroupId,
+                SetupField::GroupId => SetupField::ApiUrl,
             };
         }
         KeyCode::BackTab => {
             app.state_mut().setup_field = match app.state().setup_field {
-                SetupField::ApiUrl => SetupField::GroupName,
+                SetupField::ApiUrl => SetupField::GroupId,
                 SetupField::CollegeId => SetupField::ApiUrl,
                 SetupField::CampusId => SetupField::CollegeId,
-                SetupField::GroupName => SetupField::CampusId,
+                SetupField::GroupId => SetupField::CampusId,
             };
         }
         KeyCode::Char(c) => match app.state().setup_field {
             SetupField::ApiUrl => app.state_mut().setup_api_url.push(c),
             SetupField::CollegeId => app.state_mut().setup_college_id.push(c),
             SetupField::CampusId => app.state_mut().setup_campus_id.push(c),
-            SetupField::GroupName => app.state_mut().setup_group_name.push(c),
+            SetupField::GroupId => app.state_mut().setup_group_id.push(c),
         },
         KeyCode::Backspace => match app.state().setup_field {
             SetupField::ApiUrl => {
@@ -216,8 +209,8 @@ async fn handle_setup_mode(app: &mut App, key: KeyEvent) -> anyhow::Result<()> {
             SetupField::CampusId => {
                 app.state_mut().setup_campus_id.pop();
             }
-            SetupField::GroupName => {
-                app.state_mut().setup_group_name.pop();
+            SetupField::GroupId => {
+                app.state_mut().setup_group_id.pop();
             }
         },
         KeyCode::Esc => {

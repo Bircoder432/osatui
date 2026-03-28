@@ -22,6 +22,8 @@ include = [
 name = "osatui-gen-config"
 path = "src/bin/gen_config.rs"
 
+[features]
+default = []
 
 [dependencies]
 anyhow = "1.0.100"

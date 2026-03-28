@@ -2,6 +2,7 @@ pub mod cache;
 
 use crate::{config::Config, utils::AppDate};
 use cache::CacheManager;
+use log::{debug, info};
 use osars::{
     Client,
     models::{Campus, College, Group, Schedule},
@@ -21,16 +22,26 @@ pub struct ApiClient {
 
 impl ApiClient {
     pub async fn new(config: Config) -> anyhow::Result<Self> {
+        info!("Initialization API client");
         let mut cache = if config.cache_enabled() {
+            debug!("Cache enabled, initializing CacheManager");
             Some(CacheManager::new(config.cache_ttl()).await?)
         } else {
+            info!("Cache disabled");
             None
         };
 
         let client = Client::new(config.api_url());
-        let (college_id, campus_id, group_id) = Self::resolve_ids(&client, &config).await?;
+        debug!("Client initialized");
+        let (college_id, campus_id, group_id) =
+            (config.college_id(), config.campus_id(), config.group_id());
+        debug!(
+            "Resolved college_id: {}, campus_id: {}, group_id: {}",
+            college_id, campus_id, group_id
+        );
 
         if let Some(ref mut c) = cache {
+            debug!("Setting group_id in CacheManager: {}", group_id);
             c.set_group_id(group_id);
         }
 
@@ -75,7 +86,8 @@ impl ApiClient {
             cache.update_ttl(config.cache_ttl());
         }
 
-        let (college_id, campus_id, group_id) = Self::resolve_ids(&self.client, config).await?;
+        let (college_id, campus_id, group_id) =
+            (config.college_id(), config.campus_id(), config.group_id());
 
         if let Some(ref mut c) = self.cache {
             c.set_group_id(group_id);
@@ -86,7 +98,6 @@ impl ApiClient {
         self.campus_id = Some(campus_id);
         self.group_id = Some(group_id);
 
-        // Очищаем старый кэш если группа изменилась
         if old_group_id != Some(group_id)
             && let Some(cache) = &self.cache
             && let Some(old_gid) = old_group_id
@@ -95,69 +106,6 @@ impl ApiClient {
         }
 
         Ok(())
-    }
-
-    async fn resolve_ids(client: &Client, config: &Config) -> anyhow::Result<(u32, u32, u32)> {
-        let college_id = if let Some(college_name) = config.college_name() {
-            Self::find_college_id(client, college_name).await?
-        } else {
-            config.college_id()
-        };
-
-        let campus_id = if let Some(campus_name) = config.campus_name() {
-            Self::find_campus_id(config.api_url(), college_id, campus_name).await?
-        } else {
-            config.campus_id()
-        };
-
-        let group_id = if let Some(group_name) = config.group_name() {
-            Self::find_group_id(client, campus_id, group_name).await?
-        } else {
-            config.group_id()
-        };
-
-        Ok((college_id, campus_id, group_id))
-    }
-
-    async fn find_college_id(client: &Client, college_name: &str) -> anyhow::Result<u32> {
-        let colleges: Vec<College> = client.colleges().name(college_name).send().await?;
-        colleges
-            .first()
-            .map(|c| c.college_id)
-            .ok_or_else(|| anyhow::anyhow!("College '{}' not found", college_name))
-    }
-
-    async fn find_campus_id(
-        api_url: &str,
-        college_id: u32,
-        campus_name: &str,
-    ) -> anyhow::Result<u32> {
-        let client = Client::new(api_url).with_college(college_id);
-        let campuses: Vec<Campus> = client.campuses()?.send().await?;
-
-        let campus = campuses
-            .into_iter()
-            .find(|c| c.name.to_lowercase().contains(&campus_name.to_lowercase()));
-
-        campus.map(|c| c.id).ok_or_else(|| {
-            anyhow::anyhow!(
-                "Campus '{}' not found in college {}",
-                campus_name,
-                college_id
-            )
-        })
-    }
-
-    async fn find_group_id(
-        client: &Client,
-        campus_id: u32,
-        group_name: &str,
-    ) -> anyhow::Result<u32> {
-        let groups: Vec<Group> = client.groups(campus_id).name(group_name).send().await?;
-        groups
-            .first()
-            .map(|g| g.id)
-            .ok_or_else(|| anyhow::anyhow!("Group '{}' not found", group_name))
     }
 
     pub async fn get_colleges(&mut self) -> anyhow::Result<Vec<College>> {
@@ -223,6 +171,7 @@ impl ApiClient {
         if let Some(cache) = &self.cache
             && let Some(data) = cache.get(date).await?
         {
+            debug!("Get schedule from cache");
             return Ok(data);
         }
 

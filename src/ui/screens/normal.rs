@@ -26,21 +26,9 @@ fn render_header(f: &mut Frame, app: &App, area: ratatui::layout::Rect) {
     let state = app.state();
 
     let date_str = state.current_date.format();
-    let college_info = state
-        .config
-        .college_name()
-        .map(|n| format!("College: {}", n))
-        .unwrap_or_else(|| format!("College ID: {}", state.config.college_id()));
-    let campus_info = state
-        .config
-        .campus_name()
-        .map(|n| format!("Campus: {}", n))
-        .unwrap_or_else(|| format!("Campus ID: {}", state.config.campus_id()));
-    let group_info = state
-        .config
-        .group_name()
-        .map(|n| format!("Group: {}", n))
-        .unwrap_or_else(|| format!("Group ID: {}", state.config.group_id()));
+    let college_info = state.config.college_id();
+    let campus_info = state.config.campus_id();
+    let group_info = state.config.group_id();
 
     let lessons_count: usize = state.schedules.iter().map(|s| s.lessons.len()).sum();
     let schedule_info = if lessons_count == 0 {

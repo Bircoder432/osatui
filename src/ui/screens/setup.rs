@@ -41,7 +41,7 @@ pub fn render(f: &mut Frame, app: &App) {
         (SetupField::ApiUrl, "API URL", &state.setup_api_url),
         (SetupField::CollegeId, "College ID", &state.setup_college_id),
         (SetupField::CampusId, "Campus ID", &state.setup_campus_id),
-        (SetupField::GroupName, "Group Name", &state.setup_group_name),
+        (SetupField::GroupId, "Group Name", &state.setup_group_id),
     ];
 
     for (i, (field, label, value)) in fields.iter().enumerate() {
