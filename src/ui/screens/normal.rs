@@ -26,9 +26,6 @@ fn render_header(f: &mut Frame, app: &App, area: ratatui::layout::Rect) {
     let state = app.state();
 
     let date_str = state.current_date.format();
-    let college_info = state.config.college_id();
-    let campus_info = state.config.campus_id();
-    let group_info = state.config.group_id();
 
     let lessons_count: usize = state.schedules.iter().map(|s| s.lessons.len()).sum();
     let schedule_info = if lessons_count == 0 {
@@ -37,10 +34,7 @@ fn render_header(f: &mut Frame, app: &App, area: ratatui::layout::Rect) {
         format!("{} lessons", lessons_count)
     };
 
-    let header_text = format!(
-        " {} | {} | {} | {} | {} ",
-        date_str, college_info, campus_info, group_info, schedule_info
-    );
+    let header_text = format!(" {} | {} ", date_str, schedule_info);
 
     let header = Paragraph::new(header_text)
         .style(

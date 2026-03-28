@@ -143,6 +143,17 @@ impl ApiClient {
         .await
     }
 
+    pub async fn get_group_name(&mut self, group_id: u32) -> anyhow::Result<String> {
+        self.client
+            .groups(group_id)
+            .send()
+            .await
+            .unwrap_or_default()
+            .get(0)
+            .map(|g| g.name.clone())
+            .ok_or_else(|| anyhow::anyhow!("Group not found"))
+    }
+
     async fn get_cached_list<F, Fut, T>(&mut self, key: &str, fetch: F) -> anyhow::Result<Vec<T>>
     where
         F: FnOnce() -> Fut,
