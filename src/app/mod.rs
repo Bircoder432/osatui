@@ -54,10 +54,6 @@ impl App {
         self.should_quit = true;
     }
 
-    pub async fn get_group_name(&mut self, group_id: u32) -> Option<String> {
-        self.api.as_mut()?.get_group_name(group_id).await.ok()
-    }
-
     pub fn state(&self) -> &AppState {
         &self.state
     }
